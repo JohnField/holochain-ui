@@ -9,37 +9,24 @@ Page {
 
     ColumnLayout {
         anchors.fill: parent
+
         JsonModel {
-            id: channelsModel
+            id: contactsModel
             dataUrl: "data/channels.json"
             onIsLoaded: {
                 console.log("Channels loaded")
             }
         }
-        Pane {
-            id: pane
-            Layout.fillWidth: true
-            CommonButton {
-                id: addChannel
-                text: qsTr("Add Channel")
-                anchors.right: parent.right
-                onClicked: {
-                    contacts.StackView.view.push("qrc:/NewChannel.qml")
-                }
-            }
-        }
+
         ListView {
-            id: channelsListView
-            Layout.fillWidth: true
-            Layout.fillHeight: true
-            displayMarginBeginning: 200
-            displayMarginEnd: 40
+            id: contactsListView
+            anchors.fill: parent
             topMargin: 48
             leftMargin: 48
             bottomMargin: 48
             rightMargin: 48
             spacing: 20
-            model: channelsModel.model
+            model: contactsModel.model
             delegate: Rectangle {
                 id: delegateItem
                 width: parent.width; height: 100

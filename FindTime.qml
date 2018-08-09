@@ -2,43 +2,71 @@ import QtQuick 2.11
 import Qt.labs.calendar 1.0
 import QtQuick.Controls 2.2
 import QtQuick.Layouts 1.3
+import QtQuick.Shapes 1.0
+import QtGraphicalEffects 1.0
 
 Page {
 
     id: schedule
     property string findTimeWith
+    property string chosenDate
+    property int day: Date().getDay()
+    property int month: Date().getMonth()
+    property int year: Date().getFullYear()
     property string inviteNotes
     property string selectedTime
     property string selectedMeeting
     property string rememberChannel
     property string meetSpace
 
+   /* function dateChange() {
+
+        if (isNaN(chosenDate)){
+            month++
+            day = 1
+            console.debug(year, month, day)
+        }
+        else
+            day++
+            console.debug(year, month, day)
+
+}*/
+
     title: "Schedule a meeting with " + findTimeWith
 
     ColumnLayout {
         anchors.fill: parent
-        Text {
-            id: currentDate
-            Layout.alignment: Qt.AlignHCenter
-            font.bold: true
-            horizontalAlignment: Text.AlignHCenter
-            text: "Today: " + new Date().toLocaleDateString(Qt.locale("en_AU")) // + "\n" + new Date().toLocaleTimeString(Qt.locale("en_AU"))
-        }
-        ColumnLayout {
-            id:monthlyCalendar
-            DayOfWeekRow {
-                locale: grid.locale
-                Layout.fillWidth: true
-            }
 
-            MonthGrid {
-                id: grid
-                //month: Calendar.*  be able to change this to current month
-                //year: 2018  be able to change the year
-                locale: Qt.locale("en_US")
-                Layout.fillWidth: true
+            ScrollView {
+                Layout.alignment: Qt.AlignHCenter
+                width: parent.width / 2
+                Layout.maximumHeight: 200
+                contentHeight: 200
+                contentWidth: 200
+
+                ScrollBar.vertical.policy: ScrollBar.AlwaysOff
+
+
+                ListView {
+                    model: 365
+                    delegate: ItemDelegate {
+                        text: {
+                            if (index==0){
+                                return chosenDate = new Date().toLocaleDateString(Qt.locale("en_AU"))
+                            }
+                            else
+                                chosenDate
+
+                    }
+                    onActiveFocusChanged: {
+                        console.log(chosenDate)
+                    }
+
+                }
+
             }
-        }
+         }
+
         JsonModel {
             id: arcs
             dataUrl: "data/presence_" + rememberChannel + ".json"
@@ -52,11 +80,12 @@ Page {
             RowLayout {
                 Layout.fillWidth: true
                 width: parent.width
-                PresenceArcs {
+                TimeWedges {
                     Layout.alignment: Qt.AlignHCenter
                     presenceArcs: arcs.model
                     width: 300
                     height: 300
+
                 }
             }
         }
@@ -67,76 +96,105 @@ Page {
             Layout.alignment: Qt.AlignHCenter
             text: "Meeting details"
         }
-        ComboBox {
-            Layout.alignment: Qt.AlignHCenter
-            currentIndex: 0
-            editable:true
-            model: ListModel {
-                id: zoomRoom
-                ListElement { text: "Teal Room"}
-                ListElement { text: "Yellow Room"}
-            }
-            onAccepted: {
-                if (find(editText) === -1)
-                    meetSpace = model.append({text: editText})
-            }
-            width: 300
-            onCurrentIndexChanged: {
 
-                console.debug(zoomRoom.get(currentIndex).text)
-                meetSpace = zoomRoom.get(currentIndex).text
-            }
-
-        }
         RowLayout
         {
             Layout.alignment: Qt.AlignHCenter
             spacing: 6
 
-            ComboBox {
-                currentIndex: 0
-                editable:true
-                model: ListModel {
-                    id: meetingType
-                    ListElement { text: "Heartbeat"}
-                    ListElement { text: "Interview"}
-                    ListElement { text: "Knowledge Transfer"}
-                    ListElement { text: "..."}
-                }
-                width: 200
-                onCurrentIndexChanged: {
+            TextField{
+                        id:timeBegin
+                        text : "00:00"
+                        inputMask: "99:99"
+                        inputMethodHints: Qt.ImhDigitsOnly
+                        validator: RegExpValidator { regExp: /^([0-1\s]?[0-9\s]|2[0-3\s]):([0-5\s][0-9\s])$ / }
 
-                    console.debug(meetingType.get(currentIndex).text)
-                    selectedMeeting = meetingType.get(currentIndex).text
-                }
-                onAccepted: {
-                    if (find(editText) === -1)
-                        selectedMeeting = model.append({text: editText})
-                }
+                        width:100
+                        height:50
+                        background:Rectangle{
+                            color:"transparent"
+                            border.color: "black"
+                            border.width:2
+                            radius:(width * 0.05)
+                        }
+                    }
+            Text {
+                text: "to"
+            }
+
+            TextField{
+                        id:timeEnd
+                        text : "00:00"
+                        inputMask: "99:99"
+                        inputMethodHints: Qt.ImhDigitsOnly
+                        validator: RegExpValidator { regExp: /^([0-1\s]?[0-9\s]|2[0-3\s]):([0-5\s][0-9\s])$ / }
+
+                        width:100
+                        height:50
+                        background:Rectangle{
+                            color:"transparent"
+                            border.color: "black"
+                            border.width:2
+                            radius:(width * 0.05)
+                        }
+                    }
+        }
+
+        ComboBox {
+            Layout.alignment: Qt.AlignHCenter
+            width: 800
+            editable:true
+            currentIndex: 0
+            model: ListModel {
+                id: zoomRoom
+                ListElement { text: "Teal Room"}
+                ListElement { text: "Yellow Room"}
+                ListElement { text: "[Zoom link]"}
 
             }
-            ComboBox {
-                currentIndex: 0
-                editable:true
-                model: ListModel {
-                    id: cbTime
-                    ListElement { text: "30min"}
-                    ListElement { text: "1 hour"}
-                    ListElement { text: "1 hour 30 min"}
-                    ListElement { text: "2 hours"}
-                }
-                width: 200
-                onCurrentIndexChanged: {
+            onCurrentIndexChanged: {
 
-                    console.debug(cbTime.get(currentIndex).text)
-                    selectedTime = cbTime.get(currentIndex).text
-                }
-                onAccepted: {
-                    if (find(editText) === -1)
-                        selectedTime = model.append({text: editText})
-                }
-
+                 console.debug(zoomRoom.get(currentIndex).text)
+                 meetSpace = zoomRoom.get(currentIndex).text
+             }
+            onAccepted: {
+                if (find(editText) === -1)
+                    meetSpace = model.append({text: editText})
             }
+            onFocusChanged: {
+                meetSpace = zoomRoom.get(currentIndex).text
+            }
+
+
+
+        }
+        ComboBox {
+            Layout.alignment: Qt.AlignHCenter
+
+            currentIndex: 0
+            editable:true
+            model: ListModel {
+                id: meetingType
+                ListElement { text: "[Title]"}
+                ListElement { text: "Heartbeat"}
+                ListElement { text: "Interview"}
+                ListElement { text: "Knowledge Transfer"}
+            }
+            width: 600
+            onFocusChanged: {
+                selectedMeeting = meetingType.get(currentIndex).text
+            }
+
+            onCurrentIndexChanged: {
+
+                console.debug(meetingType.get(currentIndex).text)
+                selectedMeeting = meetingType.get(currentIndex).text
+            }
+            onAccepted: {
+                if (find(editText) === -1)
+                    selectedMeeting = model.append({text: editText})
+            }
+
         }
 
 
@@ -144,19 +202,17 @@ Page {
             id: notes
             Layout.alignment: Qt.AlignHCenter
             placeholderText: ("Enter notes: ")
-            onTextChanged: {
-                if (selectedTime=="")
-                        inviteNotes = text + ". This meeting is scheduled for 30min"
-                else
-                    inviteNotes = text + ": This "+ selectedMeeting + " is scheduled for " + selectedTime + " in " + meetSpace
-            }
+
         }
         CommonButton {
             id: submitInvite
             Layout.alignment: Qt.AlignHCenter
             text: qsTr("Invite")
             enabled: true
-            onClicked: schedule.StackView.view.push("qrc:/Chat.qml",{inviteDetails: inviteNotes , channelName: rememberChannel , inConversationWith: findTimeWith})
+            onClicked: {
+                inviteNotes = "Invitation for \""+ selectedMeeting + "\" sent: " + chosenDate + " from " + timeBegin.text + " - " + timeEnd.text + " in " + meetSpace
+                schedule.StackView.view.push("qrc:/Chat.qml",{inviteDetails: inviteNotes , channelName: rememberChannel , inConversationWith: findTimeWith})
+            }
         }
     }
 

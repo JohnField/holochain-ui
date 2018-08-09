@@ -1,6 +1,5 @@
 import QtQuick 2.11
 import QtQuick.Controls 2.2
-import QtQuick.Controls.Universal 2.4
 
 Button {
     id: standardButton
